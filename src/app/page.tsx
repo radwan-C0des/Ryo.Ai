@@ -1,51 +1,21 @@
-"use client"
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client"; 
-import { useState } from "react";
+import { auth } from '@/lib/auth'
+import { HomeView } from '@/modules/home/ui/views/home-view'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation';
+import React from 'react'
 
+async function page() {
 
-export default function Home() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-   const onSubmit = () =>{
-    authClient.signUp.email({email,name,password},{
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+  if(!session){
+    redirect("/sign-in")
+  }
 
-      onError: () => {
-        window.alert("something went wrong")
-      },
-      onSuccess: () => {
-        window.alert("sucess")
-      }
-    })
-   }
-
-
-  
   return (
-    <div>
-      <Input
-        placeholder="name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      
-      />
-      <Input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      
-      />
-      <Input
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      
-      />
-      <Button onClick={onSubmit}>
-        click me
-      </Button>
-    </div>
-  );
+    <div><HomeView /></div>
+  )
 }
+
+export default page
