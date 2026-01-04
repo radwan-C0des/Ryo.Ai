@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {  useForm } from "react-hook-form"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { AlertOctagonIcon } from "lucide-react"
+import { AlertOctagonIcon, Loader } from "lucide-react"
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
+
 import { useState } from "react"
+import { useRouter } from "next/navigation";
 
 
 const formSchema= z.object({
@@ -34,9 +35,9 @@ const formSchema= z.object({
 
 export const SignUpView = () =>{
     
-  const router= useRouter();
+    const router=useRouter();
     const [error, setError] = useState<string | null>(null);
-    const [pending, setPending] = useState(false);
+    const [loadingState, setLoadingState] = useState<string | null>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -49,22 +50,46 @@ export const SignUpView = () =>{
     });
     const onSubmit = (data: z.infer<typeof formSchema>) => {
         setError(null);
-        setPending(true);
+        setLoadingState("email");
         authClient.signUp.email(
 
         {
             name:data.name,
             email:data.email,
             password: data.password,
+            callbackURL:"/"
         },
         {
             onSuccess: () => {
-                setPending(false)
-                router.push("/")
+                setLoadingState(null)
+                router.push('/')
+                
             },
             
             onError: ({error}) => {
-                setPending(false)
+                setLoadingState(null)
+                setError(error.message)
+                
+            }
+        })
+    }
+    const onSocial = (provider:"github" | "google") => {
+        setError(null);
+        setLoadingState(provider);
+        authClient.signIn.social(
+
+        {
+           provider:provider,
+           callbackURL:"/"
+        },
+        {
+            onSuccess: () => {
+                setLoadingState(null)
+                
+            },
+            
+            onError: ({error}) => {
+                setLoadingState(null)
                 setError(error.message)
                 
             }
@@ -178,33 +203,50 @@ export const SignUpView = () =>{
                                 </Alert>
                             )}
                             <Button 
-                                disabled={pending}
+                                disabled={!!loadingState}
                                 type="submit"
                                 className="w-full"
                             >
-                                Sign in
+                                {loadingState === 'email' ? (
+                                        <>
+                                            <Loader className="animate-spin mr-2 size-4" /> 
+                                            Signing up...
+                                        </>
+                                    ) : "Sign up"}
                             </Button>
                             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                                 <span className="bg-card text-muted-foreground relative z-10 px-2">Or continue with</span>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button
-                                    disabled={pending}
+                                    disabled={!!loadingState}
+                                     onClick={() => onSocial("google")}
                                     variant="outline"
                                     type= "button"
                                     className="w-full"
                                 >
-                                    <FcGoogle className="size-4" />
-                                    Google
+
+                                    {loadingState === 'google' ? (
+                                        <Loader className="animate-spin" />
+                                    ): <FcGoogle className="size-4"  />
+                                     }
+                                    {loadingState === 'google' ? "Connecting..." : "Google"}
                                 </Button>
                                 <Button
-                                    disabled={pending}
+                                    disabled={!!loadingState}
+                                    onClick={() => onSocial("github")}
                                     variant="outline"
                                     type= "button"
                                     className="w-full"
                                 >
-                                    <FaGithub className="size-4" />
-                                    Github
+                                    {loadingState === "github" ? (
+                                        <Loader className="animate-spin" />
+                                    ): <FaGithub className="size-4" />  
+                                     }
+                                    {loadingState === "github" ? "Connecting..." : "GitHub"}
+
+                                    
+                                
                                 </Button>
                             </div>
                             <div className="text-center text-sm">
