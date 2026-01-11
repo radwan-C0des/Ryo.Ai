@@ -1,5 +1,6 @@
 
 import "./globals.css";
+import { TRPCReactProvider } from "@/trpc/client";
 
 
 export default function RootLayout({
@@ -8,6 +9,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <TRPCReactProvider>
     <html lang="en">
       <body
         
@@ -15,5 +17,6 @@ export default function RootLayout({
         {children}
       </body>
     </html>
+    </TRPCReactProvider>
   );
 }
